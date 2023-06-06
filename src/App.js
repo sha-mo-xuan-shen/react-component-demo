@@ -1,10 +1,11 @@
 import './index.css'
 import avatar from './images/avatar.png'
 import React from 'react'
+import {v4 as uuid} from 'uuid'
 
 // 时间格式化
 function formatDate (time) {
-  return `${time.getFullYear()}-${time.getMonth()}-${time.getDate()}`
+  return `${time.getFullYear()}-${time.getMonth()+1}-${time.getDate()}`
 }
 
 class App extends React.Component {
@@ -48,7 +49,71 @@ class App extends React.Component {
         // 1: 点赞 0：无态度 -1:踩
         attitude: -1
       }
-    ]
+    ],
+    comment:''
+  }
+  switchSort=(type)=>{
+    this.setState({
+      active: type
+    })
+  }
+  like=(curItem)=>{
+    console.log(curItem)
+    const {attitude,id} = curItem
+    this.setState({
+      list: this.state.list.map(item=>{
+        if(item.id===id){
+          return {
+            ...item,
+            attitude: attitude===1?0:1
+        }
+       } else{
+          return item
+        }
+      })
+    })
+  }
+  hate=(curItem)=>{
+    console.log(curItem)
+    const {attitude,id} = curItem
+    this.setState({
+      list: this.state.list.map(item=>{
+        if(item.id===id){
+          return{
+            ...item,
+            attitude:attitude===-1?0:-1
+        }
+      }else{
+        return item
+      }
+      })
+    })
+  }
+  changeText=(e)=>{
+    // console.log(e)
+    this.setState({
+      comment: e.target.value
+    })
+  }
+  delete=(id)=>{
+    this.setState({
+      list: this.state.list.filter(item=>item.id!==id)
+    })
+  }
+  submit=(comment)=>{
+    this.setState({
+      list: [
+              ...this.state.list,
+              {
+                id: uuid(),
+                author: '刘德华',
+                comment: comment,
+                time: new Date('2021-10-10 09:09:00'),
+                // 1: 点赞 0：无态度 -1:踩
+                attitude: 1
+              },
+            ]
+    })
   }
   render () {
     return (
@@ -56,14 +121,15 @@ class App extends React.Component {
         <div className="comment-container">
           {/* 评论数 */}
           <div className="comment-head">
-            <span>5 评论</span>
+            <span>{this.state.list.length} 评论</span>
           </div>
           {/* 排序 */}
           <div className="tabs-order">
             <ul className="sort-container">
               {
                 this.state.tabs.map(tab => (
-                  <li
+                  <li 
+                    onClick={()=>this.switchSort(tab.type)}
                     key={tab.id}
                     className={tab.type === this.state.active ? 'on' : ''}
                   >按{tab.name}排序</li>
@@ -83,8 +149,10 @@ class App extends React.Component {
                 rows="5"
                 placeholder="发条友善的评论"
                 className="ipt-txt"
+                value={this.state.comment}
+                onChange={this.changeText}
               />
-              <button className="comment-submit">发表评论</button>
+              <button onClick={()=>this.submit(this.state.comment)} className="comment-submit">发表评论</button>
             </div>
             <div className="comment-emoji">
               <i className="face"></i>
@@ -105,13 +173,13 @@ class App extends React.Component {
                     <p className="text">{item.comment}</p>
                     <div className="info">
                       <span className="time">{formatDate(item.time)}</span>
-                      <span className={item.attitude === 1 ? 'like liked' : 'like'}>
+                      <span onClick={()=>this.like(item)} className={item.attitude === 1 ? 'like liked' : 'like'}>
                         <i className="icon" />
                       </span>
-                      <span className={item.attitude === -1 ? 'hate hated' : 'hate'}>
+                      <span onClick={()=>this.hate(item)} className={item.attitude === -1 ? 'hate hated' : 'hate'}>
                         <i className="icon" />
                       </span>
-                      <span className="reply btn-hover">删除</span>
+                      <span onClick={()=>this.delete(item.id)} className="reply btn-hover">删除</span>
                     </div>
                   </div>
                 </div>
